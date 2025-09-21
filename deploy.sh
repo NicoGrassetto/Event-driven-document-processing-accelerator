@@ -5,9 +5,7 @@
 set -e  # Exit on any error
 
 # Variables
-RESOURCE_GROUP="rg-content-extraction-3"
-LOCATION="westus"
-DEPLOYMENT_NAME="content-extraction-3-deployment"
+DEPLOYMENT_NAME="data-extraction-deployment"
 
 # Colors for output
 RED='\033[0;31m'
@@ -15,16 +13,16 @@ GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}Starting Content Extraction service deployment...${NC}"
-
-# Create resource group
-echo -e "${BLUE}Creating resource group '$RESOURCE_GROUP'...${NC}"
-az group create --name $RESOURCE_GROUP --location $LOCATION
+echo -e "${BLUE}Starting Data Extraction service deployment...${NC}"
+echo ""
 
 # Deploy Bicep template
+echo -e "${BLUE}Building Bicep template to ARM JSON...${NC}"
+az bicep build --file infra/main.bicep --outfile infra/main.json
+
 echo -e "${BLUE}Deploying infrastructure...${NC}"
+echo -e "${BLUE}Note: You will be prompted for resource group and location if not specified${NC}"
 az deployment group create \
-  --resource-group $RESOURCE_GROUP \
   --template-file infra/main.bicep \
   --name $DEPLOYMENT_NAME
 
