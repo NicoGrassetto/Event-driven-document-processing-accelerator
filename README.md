@@ -10,9 +10,10 @@ This project provides a streamlined solution for analyzing documents using Azure
 │   └── modules/               # Reusable Bicep modules
 ├── schemas/
 │   └── schema.json            # Your custom extraction schema
+├── src/
+│   └── analyze_document.py    # Python script for document analysis
 ├── deploy.sh                  # Deploy Azure infrastructure
 ├── create-analyzer.sh         # Create custom analyzer from schema.json
-├── analyze_document.py        # Python script for document analysis
 ├── requirements.txt           # Python dependencies
 └── .analyzer-config           # Auto-generated configuration (git-ignored)
 ```
@@ -72,7 +73,7 @@ This will:
 
 ```bash
 # Analyze a document
-python analyze_document.py path/to/document.pdf
+python src/analyze_document.py path/to/document.pdf
 ```
 
 ## 📋 What is .analyzer-config?
