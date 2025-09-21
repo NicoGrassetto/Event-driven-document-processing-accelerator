@@ -1,0 +1,38 @@
+{
+  "version": "1.0",
+  "description": "Custom document analyzer schema",
+  "fields": [
+    {
+      "fieldKey": "FirstName",
+      "fieldType": "string",
+      "description": "Customer's first name"
+    },
+    {
+      "fieldKey": "LastName",
+      "fieldType": "string",
+      "description": "Customer's last name"
+    },
+    {
+      "fieldKey": "DateOfPurchase",
+      "fieldType": "date",
+      "fieldFormat": "dmy",
+      "description": "Date when the purchase was made"
+    },
+    {
+      "fieldKey": "Amount",
+      "fieldType": "number",
+      "fieldFormat": "currency",
+      "description": "Total purchase amount"
+    },
+    {
+      "fieldKey": "Location",
+      "fieldType": "string",
+      "description": "Location where the purchase was made"
+    },
+    {
+      "fieldKey": "StoreName",
+      "fieldType": "string",
+      "description": "Name of the store or business"
+    }
+  ]
+}
