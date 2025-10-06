@@ -4,12 +4,15 @@ param storageLocation string
 @description('Location for Cosmos DB')
 param cosmosLocation string
 
-// @description('The name of the Content Extraction service')
-// param contentUnderstandingName string = 'data-extraction-${uniqueString(resourceGroup().id, deployment().name)}'
+@description('Location for Content Understanding service')
+param acuLocation string
 
-// @description('The pricing tier for the Content Extraction service')
-// @allowed(['S0'])
-// param sku string = 'S0'
+@description('The name of the Content Extraction service')
+param contentUnderstandingName string = 'data-extraction-${uniqueString(resourceGroup().id, deployment().name)}'
+
+@description('The pricing tier for the Content Extraction service')
+@allowed(['S0'])
+param sku string = 'S0'
 
 @description('Storage account name')
 param storageAccountName string = 'storage${uniqueString(resourceGroup().id)}'
@@ -17,29 +20,23 @@ param storageAccountName string = 'storage${uniqueString(resourceGroup().id)}'
 @description('Cosmos DB account name')
 param cosmosDbAccountName string = 'cosmos-${uniqueString(resourceGroup().id)}'
 
-// @description('Function storage account name')
-// param functionStorageAccountName string = 'funcstorage${uniqueString(resourceGroup().id)}'
-
-// @description('Function App name')
-// param functionAppName string = 'func-${uniqueString(resourceGroup().id)}'
-
 // Content Extraction service
-// resource contentUnderstanding 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
-//   name: contentUnderstandingName
-//   location: location
-//   kind: 'AIServices'
-//   sku: {
-//     name: sku
-//   }
-//   properties: {
-//     customSubDomainName: contentUnderstandingName
-//     disableLocalAuth: false
-//     publicNetworkAccess: 'Enabled'
-//     networkAcls: {
-//       defaultAction: 'Allow'
-//     }
-//   }
-// }
+resource contentUnderstanding 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
+  name: contentUnderstandingName
+  location: acuLocation
+  kind: 'AIServices'
+  sku: {
+    name: sku
+  }
+  properties: {
+    customSubDomainName: contentUnderstandingName
+    disableLocalAuth: false
+    publicNetworkAccess: 'Enabled'
+    networkAcls: {
+      defaultAction: 'Allow'
+    }
+  }
+}
 
 // Storage Account for documents
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
@@ -239,8 +236,8 @@ resource cosmosContainer 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/con
 // }
 
 // Outputs
-// output contentUnderstandingEndpoint string = contentUnderstanding.properties.endpoint
-// output contentUnderstandingName string = contentUnderstanding.name
+output contentUnderstandingEndpoint string = contentUnderstanding.properties.endpoint
+output contentUnderstandingName string = contentUnderstanding.name
 output storageAccountName string = storageAccount.name
 output cosmosDbEndpoint string = cosmosDbAccount.properties.documentEndpoint
 // output functionAppName string = functionApp.name
