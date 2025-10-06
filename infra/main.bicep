@@ -41,7 +41,7 @@ resource contentUnderstanding 'Microsoft.CognitiveServices/accounts@2023-05-01' 
   }
 }
 
-// Storage Account for PDF documents
+// Storage Account for documents
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   name: storageAccountName
   location: location
@@ -62,22 +62,12 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
 resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' = {
   parent: storageAccount
   name: 'default'
-  properties: {
-    deleteRetentionPolicy: {
-      enabled: true
-      days: 7
-    }
-    containerDeleteRetentionPolicy: {
-      enabled: true
-      days: 7
-    }
-  }
 }
 
-// Blob container for PDF documents
-resource pdfContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+// Blob container for documents
+resource documentContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
   parent: blobServices
-  name: 'pdfs'
+  name: 'documents'
   properties: {
     publicAccess: 'None'
   }
@@ -203,7 +193,7 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
         }
         // Application-specific settings for blob trigger and output bindings
         {
-          name: 'PDF_STORAGE_CONNECTION_STRING'
+          name: 'DOCUMENT_STORAGE_CONNECTION_STRING'
           value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
         }
         {
