@@ -8,8 +8,7 @@ app = func.FunctionApp()
 @app.blob_trigger(
     arg_name="myblob", 
     path="documents/{name}",
-    connection="AzureWebJobsStorage",
-    source=func.BlobSource.EVENT_GRID
+    connection="AzureWebJobsStorage"
 )
 @app.cosmos_db_output(
     arg_name="outputDocument",
@@ -19,12 +18,12 @@ app = func.FunctionApp()
     create_if_not_exists=True
 )
 def process_document_blob(myblob: func.InputStream, outputDocument: func.Out[func.Document]):
-    """Process documents uploaded to Azure Blob Storage using Event Grid triggers.
+    """Process documents uploaded to Azure Blob Storage using blob upload triggers.
     
     This Azure Function is triggered automatically when a document is uploaded to the
-    'documents' container in Azure Blob Storage via Event Grid subscription. It performs
-    comprehensive document analysis using Azure AI Content Understanding service and
-    stores the structured results in Azure Cosmos DB for downstream processing and retrieval.
+    'documents' container in Azure Blob Storage. It performs comprehensive document 
+    analysis using Azure AI Content Understanding service and stores the structured 
+    results in Azure Cosmos DB for downstream processing and retrieval.
     
     The function implements a complete document processing pipeline:
         1. Validates required configuration from environment variables
@@ -34,10 +33,10 @@ def process_document_blob(myblob: func.InputStream, outputDocument: func.Out[fun
         5. Stores results in Cosmos DB with metadata and status tracking
         6. Handles errors gracefully with detailed logging and error storage
     
-    Event Grid Integration:
-        - Trigger: Blob creation events in the 'documents' container
-        - Source: Azure Blob Storage with Event Grid event subscription
-        - Benefits: Near real-time processing, automatic retry, dead-letter support
+    Blob Trigger Integration:
+        - Trigger: Blob upload events in the 'documents' container
+        - Source: Azure Blob Storage polling mechanism
+        - Benefits: Simple setup, no additional configuration needed
     
     Input Binding:
         myblob (func.InputStream): Stream containing the uploaded document.
@@ -95,7 +94,7 @@ def process_document_blob(myblob: func.InputStream, outputDocument: func.Out[fun
     
     Example Event Flow:
         1. User uploads 'invoice.pdf' to 'documents' container
-        2. Event Grid detects the blob creation event
+        2. Blob trigger detects the new file via polling
         3. Function is triggered with blob input stream
         4. Document is analyzed: extracts invoice number, date, amount, etc.
         5. Results stored in Cosmos DB with id "documents_invoice_pdf"
@@ -118,9 +117,10 @@ def process_document_blob(myblob: func.InputStream, outputDocument: func.Out[fun
         ERROR: Error processing document invoice.pdf: Analysis failed: Invalid document format
     
     Note:
-        The function uses Event Grid trigger instead of plain blob trigger for better
-        reliability, automatic retries, and dead-letter queue support. Event Grid
-        ensures exactly-once delivery semantics.
+        The function uses a standard blob trigger that polls the storage account
+        for new blobs. While simpler to set up than Event Grid, it may have a slight
+        delay (typically a few seconds) in detecting new blobs depending on the
+        polling interval.
         
         Error documents are written to the same Cosmos DB container to maintain a
         complete audit trail. Filter by processingStatus field to identify failures.
