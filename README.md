@@ -1,9 +1,22 @@
 # Event Driven Document Processing Accelerator
+
+| [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Azure-Samples/call-center-voice-agent-accelerator) | [![Open in Dev Containers](https://img.shields.io/static/v1?style=for-the-badge&label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/Azure-Samples/call-center-voice-agent-accelerator)
+|---|---|
+
 Welcome to the Event Driven Document Processing solution accelerator. It's a lightweight template to extract information from documents. This solution accelerator uses Azure Azure AI Content Understanding and Azure Functions.
 
 Azure AI Content Understanding is a powerful solution for extracting structured insights from unstructured data. Designed for developers building intelligent automation workflows, it streamlines the process of analyzing content by unifying layout analysis, semantic extraction, and schema-driven interpretation into a single, cohesive interface. This eliminates the need for complex manual parsing or custom ML pipelines, enabling scalable, low-latency insight extraction across diverse formats. Whether you're working with documents, videos or audio files, Azure AI Content Understanding delivers high-quality results that integrate seamlessly into your business logic. 
 </br>
 [Learn more about Azure AI Content Understanding](https://actual-url-here.com).
+
+
+<br/>
+
+<div align="center">
+  
+[**Features**](#features) \| [**Getting Started**](#getting-started) \| [**Testing the Agent**](#testing-the-agent) \| [**Guidance**](#guidance) \| [**Resources**](#resources)
+
+</div>
 
 ## Features
 
@@ -132,9 +145,9 @@ To change the `azd` parameters from the default values, follow the steps [here](
     ```
     It will prompt you to provide an `azd` environment name (like "flask-app"), select a subscription from your Azure account, and select a location (like "eastus"). Then it will provision the resources in your account and deploy the latest code. If you get an error with deployment, changing the location can help, as there may be availability constraints for some of the resources.
 
-3. When `azd` has finished deploying, you'll see an endpoint URI in the command output. Visit that URI, and you should see the API output! 🎉
+3. When `azd` has finished deploying, you'll see the resource group alongside resources in the Azure Portal.
 
-4. When you've made any changes to the app code, you can just run:
+4. When you've made any changes to the code, you can just run:
 
     ```shell
     azd deploy
@@ -142,11 +155,6 @@ To change the `azd` parameters from the default values, follow the steps [here](
 
 >[!NOTE]
 >AZD will also setup the local Python environment for you, using `venv` and installing the required packages.
-
-
->[!NOTE]
->- Region: swedencentral is strongly recommended due to AI Foundry availability.
->- Post-Deployment: You can also setup ACS Event Grid subscription and PSTN to use the ACS client.
 
 ## Resources
 - [📖 Docs: Voice live overview](https://learn.microsoft.com/azure/ai-services/speech-service/voice-live)
