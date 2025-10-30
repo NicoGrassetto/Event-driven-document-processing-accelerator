@@ -117,7 +117,7 @@ If you're not using one of the above options for opening the project, then you'l
 2. Download the project code:
 
     ```shell
-    azd init -t Azure-Samples/call-center-voice-agent-accelerator/
+    azd init -t NicoGrassetto/Event-driven-document-processing-accelerator
     ```
     **Note:** the above command should be run in a new folder of your choosing. You do not need to run `git clone` to download the project source code. `azd init` handles this for you.
 
@@ -143,7 +143,7 @@ To change the `azd` parameters from the default values, follow the steps [here](
     ```shell
     azd up
     ```
-    It will prompt you to provide an `azd` environment name (like "flask-app"), select a subscription from your Azure account, and select a location (like "eastus"). Then it will provision the resources in your account and deploy the latest code. If you get an error with deployment, changing the location can help, as there may be availability constraints for some of the resources.
+    It will prompt you to provide an `azd` environment name (like "my-solution"), select a subscription from your Azure account, and select a location (like "eastus"). Then it will provision the resources in your account and deploy the latest code. If you get an error with deployment, changing the location can help, as there may be availability constraints for some of the resources.
 
 3. When `azd` has finished deploying, you'll see the resource group alongside resources in the Azure Portal.
 
