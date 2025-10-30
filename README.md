@@ -48,10 +48,10 @@ Use the [Azure pricing calculator](https://azure.microsoft.com/en-us/pricing/cal
 
 | Product | Description | Cost |
 |---|---|---|
-| [Azure AI Content Understanding ](https://learn.microsoft.com/azure/ai-services/speech-service/voice-live/) | Low-latency and high-quality speech to speech interactions | [Pricing](https://azure.microsoft.com/pricing/details/cognitive-services/speech-services/) |
-| [Azure Functions](https://learn.microsoft.com/azure/communication-services/overview) | Server-based intelligent call workflows | [Pricing](https://azure.microsoft.com/pricing/details/communication-services/) |
-| [Azure Cosmos DB](https://learn.microsoft.com/azure/container-apps/) | Hosts the web application frontend | [Pricing](https://azure.microsoft.com/pricing/details/container-apps/) |
-| [Azure Blob Storage](https://learn.microsoft.com/azure/container-registry/) | Stores container images for deployment | [Pricing](https://azure.microsoft.com/pricing/details/container-registry/) |
+| [Azure AI Content Understanding ](https://learn.microsoft.com/en-us/azure/ai-services/content-understanding/) | Low-latency and high-quality speech to speech interactions | [Pricing](https://azure.microsoft.com/pricing/details/cognitive-services/speech-services/) |
+| [Azure Functions](https://learn.microsoft.com/en-us/azure/azure-functions/) | Server-based intelligent call workflows | [Pricing](https://azure.microsoft.com/pricing/details/communication-services/) |
+| [Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/) | Hosts the web application frontend | [Pricing](https://azure.microsoft.com/pricing/details/container-apps/) |
+| [Azure Blob Storage](https://docs.azure.cn/en-us/storage/blobs/) | Stores container images for deployment | [Pricing](https://azure.microsoft.com/pricing/details/container-registry/) |
 
 
 Here are some developers tools to set up as prerequisites:
