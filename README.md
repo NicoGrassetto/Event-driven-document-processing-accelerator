@@ -14,7 +14,7 @@ Azure AI Content Understanding is a powerful solution for extracting structured 
 
 <div align="center">
   
-[**Features**](#features) \| [**Getting Started**](#getting-started) \| [**Testing the Agent**](#testing-the-agent) \| [**Guidance**](#guidance) \| [**Resources**](#resources)
+[**Features**](#features) \| [**Getting Started**](#getting-started)  \| [**Resources**](#resources)
 
 </div>
 
@@ -48,10 +48,10 @@ Use the [Azure pricing calculator](https://azure.microsoft.com/en-us/pricing/cal
 
 | Product | Description | Cost |
 |---|---|---|
-| [Azure AI Content Understanding ](https://learn.microsoft.com/en-us/azure/ai-services/content-understanding/) | Low-latency and high-quality speech to speech interactions | [Pricing](https://azure.microsoft.com/pricing/details/cognitive-services/speech-services/) |
-| [Azure Functions](https://learn.microsoft.com/en-us/azure/azure-functions/) | Server-based intelligent call workflows | [Pricing](https://azure.microsoft.com/pricing/details/communication-services/) |
-| [Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/) | Hosts the web application frontend | [Pricing](https://azure.microsoft.com/pricing/details/container-apps/) |
-| [Azure Blob Storage](https://docs.azure.cn/en-us/storage/blobs/) | Stores container images for deployment | [Pricing](https://azure.microsoft.com/pricing/details/container-registry/) |
+| [Azure AI Content Understanding ](https://learn.microsoft.com/en-us/azure/ai-services/content-understanding/) | Extracts insights from unstructured content like documents, images, and videos using AI models | [Pricing](https://azure.microsoft.com/en-us/pricing/details/content-understanding/?msockid=2b189776556f650e3a1882ef5427649e) |
+| [Azure Functions](https://learn.microsoft.com/en-us/azure/azure-functions/) | Serverless compute service that runs event-driven code without managing infrastructure | [Pricing](https://azure.microsoft.com/en-us/pricing/details/functions/?msockid=2b189776556f650e3a1882ef5427649e) |
+| [Azure Cosmos DB](https://learn.microsoft.com/en-us/azure/cosmos-db/) | Globally distributed NoSQL database for scalable, low-latency data storage and access | [Pricing](https://azure.microsoft.com/en-us/pricing/details/cosmos-db/autoscale-provisioned/?msockid=2b189776556f650e3a1882ef5427649e) |
+| [Azure Blob Storage](https://docs.azure.cn/en-us/storage/blobs/) | Object storage solution for unstructured data like documents, images, and backups | [Pricing](https://azure.microsoft.com/en-us/pricing/details/storage/blobs/?msockid=2b189776556f650e3a1882ef5427649e) |
 
 
 Here are some developers tools to set up as prerequisites:
@@ -68,7 +68,7 @@ Pick from the options below to see step-by-step instructions for: GitHub Codespa
 <details>
   <summary><b>Deploy in GitHub Codespaces</b></summary>
   
-### GitHub Codespaces
+#### GitHub Codespaces
 
 You can run this solution using GitHub Codespaces. The button will open a web-based VS Code instance in your browser:
 
@@ -86,7 +86,7 @@ You can run this solution using GitHub Codespaces. The button will open a web-ba
 <details>
   <summary><b>Deploy in VS Code Dev Containers </b></summary>
 
- ### VS Code Dev Containers
+#### VS Code Dev Containers
 
 You can run this solution in VS Code Dev Containers, which will open the project in your local VS Code using the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers):
 
@@ -105,7 +105,7 @@ You can run this solution in VS Code Dev Containers, which will open the project
 <details>
   <summary><b>Deploy in your local environment</b></summary>
 
- ### Local environment
+ #### Local environment
 
 If you're not using one of the above options for opening the project, then you'll need to:
 
