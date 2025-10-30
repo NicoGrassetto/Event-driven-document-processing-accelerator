@@ -157,7 +157,5 @@ To change the `azd` parameters from the default values, follow the steps [here](
 >AZD will also setup the local Python environment for you, using `venv` and installing the required packages.
 
 ## Resources
-- [📖 Docs: Voice live overview](https://learn.microsoft.com/azure/ai-services/speech-service/voice-live)
-- [📖 Blog: Upgrade your voice agent with Azure AI Voice Live API](https://techcommunity.microsoft.com/blog/azure-ai-foundry-blog/upgrade-your-voice-agent-with-azure-ai-voice-live-api/4458247)
-- [📖 Docs: Azure Speech](https://learn.microsoft.com/azure/ai-services/speech-service/)
-- [📖 Docs: Azure Communication Services (Call Automation)](https://learn.microsoft.com/azure/communication-services/concepts/call-automation/call-automation)
+- [📖 Docs: Azure AI Content Understanding](https://learn.microsoft.com/azure/ai-services/speech-service/voice-live)
+- [📖 Samples: Python code samples](https://github.com/Azure-Samples/azure-ai-content-understanding-python)
