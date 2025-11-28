@@ -1,2 +1,5 @@
 requests>=2.25.0
 azure-functions>=1.18.0
+azure-identity>=1.15.0
+azure-cosmos>=4.5.0
+azure-storage-blob>=12.19.0

@@ -1,0 +1,31 @@
+name: event-driven-document-processing
+metadata:
+  template: event-driven-document-processing@1.0.0
+
+services:
+  api:
+    project: ./src
+    language: python
+    host: function
+
+infra:
+  provider: bicep
+  path: ./infra
+
+hooks:
+  postprovision:
+    posix:
+      shell: sh
+      run: |
+        echo "Creating Content Understanding analyzer..."
+        chmod +x ./scripts/create-analyzer.sh
+        ./scripts/create-analyzer.sh
+      interactive: true
+      continueOnError: false
+    windows:
+      shell: pwsh
+      run: |
+        Write-Host "Creating Content Understanding analyzer..."
+        ./scripts/create-analyzer.ps1
+      interactive: true
+      continueOnError: false

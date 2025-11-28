@@ -3,10 +3,10 @@
 | [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?repo=NicoGrassetto/Event-driven-document-processing-accelerator) | [![Open in Dev Containers](https://img.shields.io/static/v1?style=for-the-badge&label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/NicoGrassetto/Event-driven-document-processing-accelerator)
 |---|---|
 
-Welcome to the Event Driven Document Processing solution accelerator. It's a lightweight template to extract information from documents. This solution accelerator uses Azure Azure AI Content Understanding and Azure Functions.
+Welcome to the Event Driven Document Processing solution accelerator. It's a lightweight template to extract information from documents. This solution accelerator uses Azure AI Content Understanding, Azure Functions (Flex Consumption), and Azure Cosmos DB.
 
-Azure AI Content Understanding is a powerful solution for extracting structured insights from unstructured data. Designed for developers building intelligent automation workflows, it streamlines the process of analyzing content by unifying layout analysis, semantic extraction, and schema-driven interpretation into a single, cohesive interface. This eliminates the need for complex manual parsing or custom ML pipelines, enabling scalable, low-latency insight extraction across diverse formats. Whether you're working with documents, videos or audio files, Azure AI Content Understanding delivers high-quality results that integrate seamlessly into your business logic. 
-</br>
+Azure AI Content Understanding is a powerful solution for extracting structured insights from unstructured data. Designed for developers building intelligent automation workflows, it streamlines the process of analyzing content by unifying layout analysis, semantic extraction, and schema-driven interpretation into a single, cohesive interface. This eliminates the need for complex manual parsing or custom ML pipelines, enabling scalable, low-latency insight extraction across diverse formats. Whether you're working with documents, videos or audio files, Azure AI Content Understanding delivers high-quality results that integrate seamlessly into your business logic.
+
 [Learn more about Azure AI Content Understanding](https://learn.microsoft.com/en-us/azure/ai-services/content-understanding/).
 
 
@@ -14,7 +14,7 @@ Azure AI Content Understanding is a powerful solution for extracting structured 
 
 <div align="center">
   
-[**Features**](#features) \| [**Getting Started**](#getting-started)  \| [**Resources**](#resources)
+[**Features**](#features) \| [**Getting Started**](#getting-started) \| [**Usage**](#usage) \| [**Customization**](#customization) \| [**Resources**](#resources)
 
 </div>
 
@@ -24,15 +24,25 @@ This accelerator helps simplify the extraction of information from documents.
 
 The solution includes:
 
-- An end-to-end pipeline triggered by the upload of documents to a blob storage
-- Flexible configuration to customize schemas
-- Easy integration with other architectures (just upload the document to the blob storage). Output binding can be easily swapped for your desired source
+- **Blob-triggered processing**: Automatically processes documents uploaded to Azure Blob Storage
+- **Managed Identity authentication**: Secure, keyless authentication to all Azure services
+- **Flex Consumption plan**: Cost-effective, auto-scaling Azure Functions
+- **Cosmos DB output**: Extracted data stored in a serverless Cosmos DB database
+- **Custom schema support**: Flexible field extraction based on your JSON schema
+- **HTTP debug endpoint**: Manual trigger for testing document processing
 
 > You can also try Azure AI Content Understanding via the Azure AI Foundry UI for quick experimentation before deploying this template to your own Azure subscription.
 
 ### Architecture diagram
 
 ![Architecture Diagram](diagram.png)
+
+### How It Works
+
+1. **Upload**: Documents are uploaded to the `documents` container in Azure Blob Storage
+2. **Trigger**: The blob trigger automatically detects new uploads and starts processing
+3. **Analyze**: Azure AI Content Understanding extracts fields defined in your schema
+4. **Store**: Extracted data is saved to Cosmos DB with metadata (document ID, filename, timestamp)
 
 ## Getting Started
 
@@ -54,12 +64,14 @@ Use the [Azure pricing calculator](https://azure.microsoft.com/en-us/pricing/cal
 | [Azure Blob Storage](https://docs.azure.cn/en-us/storage/blobs/) | Object storage solution for unstructured data like documents, images, and backups | [Pricing](https://azure.microsoft.com/en-us/pricing/details/storage/blobs/?msockid=2b189776556f650e3a1882ef5427649e) |
 
 
-Here are some developers tools to set up as prerequisites:
+Here are some developer tools to set up as prerequisites:
+
 - [Azure CLI](https://learn.microsoft.com/cli/azure/what-is-azure-cli): `az`
 - [Azure Developer CLI](https://learn.microsoft.com/azure/developer/azure-developer-cli/overview): `azd`
-- [Python](https://www.python.org/about/gettingstarted/): `python`
-- [UV](https://docs.astral.sh/uv/getting-started/installation/): `uv`
-- Optionally [Docker](https://www.docker.com/get-started/): `docker`
+- [Python 3.11+](https://www.python.org/about/gettingstarted/): `python`
+- [PowerShell](https://learn.microsoft.com/powershell/scripting/install/installing-powershell) (for Windows) or Bash (for Linux/macOS)
+
+> **Note**: Due to Azure Policy restrictions in some subscriptions, key-based authentication may be disabled on storage accounts. See the [Usage](#usage) section for how to upload files using Azure AD authentication.
 
 
 ### Deployment Options
@@ -153,9 +165,117 @@ To change the `azd` parameters from the default values, follow the steps [here](
     azd deploy
     ```
 
->[!NOTE]
->AZD will also setup the local Python environment for you, using `venv` and installing the required packages.
+> [!NOTE]
+> The `azd up` command will provision infrastructure, deploy the function app, and create a custom Content Understanding analyzer based on `schemas/schema.json`.
+
+## Usage
+
+### Uploading Documents
+
+Due to Azure Policy restrictions in many subscriptions, storage account key-based authentication is disabled. Use Azure AD authentication instead:
+
+```powershell
+# Upload a document using Azure CLI with your identity
+az storage blob upload \
+  --account-name <STORAGE_ACCOUNT_NAME> \
+  --container-name documents \
+  --file "path/to/your/document.pdf" \
+  --name "document.pdf" \
+  --auth-mode login \
+  --overwrite
+```
+
+> **First-time setup**: You need the "Storage Blob Data Contributor" role on the storage account. The deployment automatically assigns this role to the Function App's managed identity, but you may need to assign it to your user account manually:
+> ```powershell
+> az role assignment create \
+>   --assignee <YOUR_USER_ID_OR_EMAIL> \
+>   --role "Storage Blob Data Contributor" \
+>   --scope "/subscriptions/<SUB_ID>/resourceGroups/<RG_NAME>/providers/Microsoft.Storage/storageAccounts/<STORAGE_NAME>"
+> ```
+
+### Testing with HTTP Endpoint
+
+For debugging, you can manually trigger document processing via the HTTP endpoint:
+
+```powershell
+# Get the function key
+$funcKey = az functionapp keys list --name <FUNCTION_APP_NAME> --resource-group <RG_NAME> --query "functionKeys.default" -o tsv
+
+# Trigger processing
+Invoke-RestMethod -Uri "https://<FUNCTION_APP_NAME>.azurewebsites.net/api/process?code=$funcKey" `
+  -Method Post `
+  -ContentType "application/json" `
+  -Body '{"blob_name": "document.pdf", "container_name": "documents"}'
+```
+
+### Viewing Results
+
+Processed documents are stored in Cosmos DB:
+- **Database**: `documents`
+- **Container**: `processed-documents`
+- **Partition Key**: `/documentId`
+
+Each document includes:
+- `documentId`: Unique identifier
+- `fileName`: Original blob name
+- `processedAt`: Timestamp
+- `extractedFields`: Fields extracted based on your schema
+
+## Customization
+
+### Modifying the Extraction Schema
+
+Edit `schemas/schema.json` to define the fields you want to extract:
+
+```json
+{
+  "version": "1.0",
+  "description": "Your custom schema description",
+  "fields": [
+    {
+      "fieldKey": "FieldName",
+      "fieldType": "string",
+      "description": "Description of what to extract"
+    },
+    {
+      "fieldKey": "Amount",
+      "fieldType": "number",
+      "description": "A numeric value to extract"
+    },
+    {
+      "fieldKey": "Date",
+      "fieldType": "date",
+      "description": "A date value to extract"
+    }
+  ]
+}
+```
+
+**Supported field types**: `string`, `number`, `date`, `boolean`, `array`, `object`
+
+After modifying the schema, recreate the analyzer:
+
+```powershell
+# Windows
+.\scripts\create-analyzer.ps1 -ResourceGroup <RG_NAME> -DeploymentName <DEPLOYMENT_NAME>
+
+# Linux/macOS
+./scripts/create-analyzer.sh
+```
+
+### Default Schema Fields
+
+The default schema extracts purchase receipt information:
+- `FirstName` - Customer's first name
+- `LastName` - Customer's last name
+- `DateOfPurchase` - Purchase date
+- `Amount` - Total amount
+- `Location` - Purchase location
+- `StoreName` - Store/business name
 
 ## Resources
-- [📖 Docs: Azure AI Content Understanding](https://learn.microsoft.com/azure/ai-services/speech-service/voice-live)
+
+- [📖 Docs: Azure AI Content Understanding](https://learn.microsoft.com/azure/ai-services/content-understanding/)
 - [📖 Samples: Python code samples](https://github.com/Azure-Samples/azure-ai-content-understanding-python)
+- [📖 Azure Functions Python Developer Guide](https://learn.microsoft.com/azure/azure-functions/functions-reference-python)
+- [📖 Azure Cosmos DB Python SDK](https://learn.microsoft.com/azure/cosmos-db/nosql/sdk-python)
