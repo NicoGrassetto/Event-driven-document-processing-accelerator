@@ -38,6 +38,9 @@ param logAnalyticsName string = 'log-docproc-${uniqueString(resourceGroup().id)}
 @description('Analyzer name for Content Understanding')
 param analyzerName string = 'custom-schema-analyzer'
 
+@description('Principal ID of the user to grant Storage Blob Data Contributor role (optional)')
+param userPrincipalId string = ''
+
 // Content Extraction service
 resource contentUnderstanding 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
   name: contentUnderstandingName
@@ -165,15 +168,15 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-// App Service Plan - Flex Consumption
+// App Service Plan - Linux Consumption
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: appServicePlanName
   location: functionAppLocation
   sku: {
-    tier: 'FlexConsumption'
-    name: 'FC1'
+    name: 'Y1'
+    tier: 'Dynamic'
   }
-  kind: 'functionapp'
+  kind: 'functionapp,linux'
   properties: {
     reserved: true // Required for Linux
   }
@@ -258,6 +261,7 @@ resource deploymentContainer 'Microsoft.Storage/storageAccounts/blobServices/con
 
 // Role Definitions
 var storageBlobDataOwnerRole = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b')
+var storageBlobDataContributorRole = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'ba92f5b4-2d11-453d-a403-e96b0029c9fe')
 var cognitiveServicesUserRole = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a97b65f3-24c7-4388-baec-2e87135dc908')
 
 // Role Assignment: Storage Blob Data Owner (for blob trigger and deployment)
@@ -291,6 +295,18 @@ resource cognitiveServicesUserAssignment 'Microsoft.Authorization/roleAssignment
     principalId: functionApp.identity.principalId
     principalType: 'ServicePrincipal'
     roleDefinitionId: cognitiveServicesUserRole
+  }
+}
+
+// Role Assignment: Storage Blob Data Contributor for deploying user (optional)
+// This allows users to upload documents to the storage account via Azure AD
+resource userStorageBlobContributorAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(userPrincipalId)) {
+  name: guid(storageAccount.id, userPrincipalId, storageBlobDataContributorRole)
+  scope: storageAccount
+  properties: {
+    principalId: userPrincipalId
+    principalType: 'User'
+    roleDefinitionId: storageBlobDataContributorRole
   }
 }
 
