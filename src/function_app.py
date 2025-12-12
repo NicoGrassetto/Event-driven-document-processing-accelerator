@@ -6,7 +6,7 @@ extracts information using Azure Content Understanding (ACU),
 and stores the results in Azure Cosmos DB.
 
 Triggers:
-    - Blob trigger: Automatically processes documents uploaded to 'documents' container
+    - Event Grid trigger: Automatically processes documents uploaded to 'documents' container via Azure Event Grid
     - HTTP trigger: Debug endpoint for manual document processing
 
 Authentication:
@@ -154,33 +154,60 @@ def process_document_internal(
     return cosmos_document
 
 
-@app.blob_trigger(
-    arg_name="blob",
-    path="documents/{name}",
-    connection="AzureWebJobsStorage"
-)
-def process_document(blob: func.InputStream):
-    """Process documents uploaded to the 'documents' blob container.
+@app.event_grid_trigger(arg_name="event")
+def process_document_eventgrid(event: func.EventGridEvent):
+    """Process documents uploaded to the 'documents' blob container via Event Grid.
     
-    This function is triggered automatically when a file is uploaded to the
-    'documents' container in the configured storage account.
+    This function is triggered automatically by Event Grid when a blob is created
+    in the 'documents' container in the configured storage account.
     
     Args:
-        blob: The blob input stream containing the document data.
+        event: The Event Grid event containing blob metadata.
     """
-    blob_name = blob.name or "unknown"
-    logger.info(f"Blob trigger activated for: {blob_name}")
-    logger.info(f"Blob size: {blob.length} bytes")
+    logger.info(f"Event Grid trigger activated")
+    logger.info(f"Event type: {event.event_type}")
+    logger.info(f"Event subject: {event.subject}")
     
     try:
-        # Read blob content
-        document_bytes = blob.read()
+        # Extract blob information from Event Grid event
+        event_data = event.get_json()
+        blob_url = event_data.get('url')
+        content_length = event_data.get('contentLength', 0)
+        content_type = event_data.get('contentType', 'application/octet-stream')
         
-        # Determine content type from blob properties or file extension
-        content_type = _get_content_type(blob_name)
+        # Extract blob name from subject (format: /blobServices/default/containers/{container}/blobs/{blobname})
+        subject_parts = event.subject.split('/blobs/')
+        if len(subject_parts) < 2:
+            logger.error(f"Invalid subject format: {event.subject}")
+            return
         
-        # Extract just the filename from the path
-        file_name = blob_name.split("/")[-1] if "/" in blob_name else blob_name
+        blob_path = subject_parts[1]
+        file_name = blob_path.split("/")[-1]
+        
+        logger.info(f"Processing blob: {blob_path}")
+        logger.info(f"Blob size: {content_length} bytes")
+        logger.info(f"Content type: {content_type}")
+        
+        # Download blob content using managed identity
+        credential = get_credential()
+        storage_account_name = os.environ.get("STORAGE_ACCOUNT_NAME")
+        
+        if not storage_account_name:
+            raise ValueError("STORAGE_ACCOUNT_NAME environment variable is required")
+        
+        blob_service_client = BlobServiceClient(
+            account_url=f"https://{storage_account_name}.blob.core.windows.net",
+            credential=credential
+        )
+        
+        # Extract container and blob name from the path
+        container_name = "documents"
+        blob_name = blob_path
+        
+        blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+        document_bytes = blob_client.download_blob().readall()
+        
+        logger.info(f"Downloaded {len(document_bytes)} bytes from blob storage")
         
         # Process the document
         result = process_document_internal(
@@ -194,7 +221,8 @@ def process_document(blob: func.InputStream):
         logger.info(f"Extracted fields: {list(result['extractedFields'].keys())}")
         
     except Exception as e:
-        logger.error(f"Error processing blob {blob_name}: {str(e)}")
+        logger.error(f"Error processing Event Grid event: {str(e)}")
+        logger.error(f"Event data: {event.get_json()}")
         raise
 
 

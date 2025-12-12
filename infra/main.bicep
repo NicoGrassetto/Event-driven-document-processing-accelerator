@@ -168,17 +168,21 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-// App Service Plan - Linux Consumption
+// App Service Plan - Premium Plan (Highest tier for production)
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: appServicePlanName
   location: functionAppLocation
   sku: {
-    name: 'Y1'
-    tier: 'Dynamic'
+    name: 'EP3' // Elastic Premium Plan - Highest tier
+    tier: 'ElasticPremium'
+    size: 'EP3'
+    family: 'EP'
+    capacity: 1
   }
-  kind: 'functionapp,linux'
+  kind: 'elastic'
   properties: {
     reserved: true // Required for Linux
+    maximumElasticWorkerCount: 20
   }
 }
 
@@ -196,30 +200,22 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
   properties: {
     serverFarmId: appServicePlan.id
     httpsOnly: true
-    functionAppConfig: {
-      deployment: {
-        storage: {
-          type: 'blobContainer'
-          value: '${storageAccount.properties.primaryEndpoints.blob}deploymentpackage'
-          authentication: {
-            type: 'SystemAssignedIdentity'
-          }
-        }
-      }
-      scaleAndConcurrency: {
-        maximumInstanceCount: 100
-        instanceMemoryMB: 2048
-      }
-      runtime: {
-        name: 'python'
-        version: '3.11'
-      }
-    }
     siteConfig: {
+      pythonVersion: '3.11'
+      linuxFxVersion: 'Python|3.11'
+      alwaysOn: true // Required for Premium plan
       appSettings: [
         {
           name: 'AzureWebJobsStorage__accountName'
           value: storageAccount.name
+        }
+        {
+          name: 'FUNCTIONS_EXTENSION_VERSION'
+          value: '~4'
+        }
+        {
+          name: 'FUNCTIONS_WORKER_RUNTIME'
+          value: 'python'
         }
         {
           name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
@@ -245,19 +241,28 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
           name: 'ANALYZER_NAME'
           value: analyzerName
         }
+        {
+          name: 'STORAGE_ACCOUNT_NAME'
+          value: storageAccount.name
+        }
       ]
     }
   }
 }
 
-// Deployment package container for Flex Consumption
-resource deploymentContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
-  parent: blobServices
-  name: 'deploymentpackage'
+// Event Grid System Topic for Storage Account
+resource eventGridSystemTopic 'Microsoft.EventGrid/systemTopics@2023-12-15-preview' = {
+  name: 'evgt-${storageAccountName}'
+  location: storageLocation
   properties: {
-    publicAccess: 'None'
+    source: storageAccount.id
+    topicType: 'Microsoft.Storage.StorageAccounts'
   }
 }
+
+// Note: Event Grid subscription will be created manually after deployment
+// This is because the function needs to be deployed first with code before we can subscribe
+// Use Azure CLI or Portal to create the subscription pointing to the function endpoint
 
 // Role Definitions
 var storageBlobDataOwnerRole = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b')
@@ -321,3 +326,6 @@ output functionAppHostName string = functionApp.properties.defaultHostName
 output functionAppPrincipalId string = functionApp.identity.principalId
 output appInsightsConnectionString string = appInsights.properties.ConnectionString
 output analyzerName string = analyzerName
+output eventGridSystemTopicName string = eventGridSystemTopic.name
+output resourceGroupName string = resourceGroup().name
+output subscriptionId string = subscription().subscriptionId

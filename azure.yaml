@@ -29,3 +29,13 @@ hooks:
         ./scripts/create-analyzer.ps1
       interactive: true
       continueOnError: false
+  
+  postdeploy:
+    posix:
+      shell: sh
+      run: |
+        echo "Creating Event Grid subscription..."
+        chmod +x ./scripts/create-eventgrid-subscription.sh
+        ./scripts/create-eventgrid-subscription.sh
+      interactive: true
+      continueOnError: false

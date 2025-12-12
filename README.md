@@ -3,7 +3,7 @@
 | [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?repo=NicoGrassetto/Event-driven-document-processing-accelerator) | [![Open in Dev Containers](https://img.shields.io/static/v1?style=for-the-badge&label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/NicoGrassetto/Event-driven-document-processing-accelerator)
 |---|---|
 
-Welcome to the Event Driven Document Processing solution accelerator. It's a lightweight template to extract information from documents. This solution accelerator uses Azure AI Content Understanding, Azure Functions (Flex Consumption), and Azure Cosmos DB.
+Welcome to the Event Driven Document Processing solution accelerator. It's a lightweight template to extract information from documents. This solution accelerator uses Azure AI Content Understanding, Azure Functions (Premium Plan), Azure Event Grid, and Azure Cosmos DB.
 
 Azure AI Content Understanding is a powerful solution for extracting structured insights from unstructured data. Designed for developers building intelligent automation workflows, it streamlines the process of analyzing content by unifying layout analysis, semantic extraction, and schema-driven interpretation into a single, cohesive interface. This eliminates the need for complex manual parsing or custom ML pipelines, enabling scalable, low-latency insight extraction across diverse formats. Whether you're working with documents, videos or audio files, Azure AI Content Understanding delivers high-quality results that integrate seamlessly into your business logic.
 
@@ -24,10 +24,10 @@ This accelerator helps simplify the extraction of information from documents.
 
 The solution includes:
 
-- **Blob-triggered processing**: Automatically processes documents uploaded to Azure Blob Storage
+- **Event Grid-triggered processing**: Automatically processes documents uploaded to Azure Blob Storage using Azure Event Grid for reliable, scalable event delivery
 - **Managed Identity authentication**: Secure, keyless authentication to all Azure services
-- **Flex Consumption plan**: Cost-effective, auto-scaling Azure Functions
-- **Cosmos DB output**: Extracted data stored in a serverless Cosmos DB database
+- **Premium EP3 plan**: High-performance Azure Functions with always-on capability and elastic scaling
+- **Cosmos DB output**: Extracted data stored in a serverless Cosmos DB database with RBAC authentication
 - **Custom schema support**: Flexible field extraction based on your JSON schema
 - **HTTP debug endpoint**: Manual trigger for testing document processing
 
@@ -40,9 +40,10 @@ The solution includes:
 ### How It Works
 
 1. **Upload**: Documents are uploaded to the `documents` container in Azure Blob Storage
-2. **Trigger**: The blob trigger automatically detects new uploads and starts processing
-3. **Analyze**: Azure AI Content Understanding extracts fields defined in your schema
-4. **Store**: Extracted data is saved to Cosmos DB with metadata (document ID, filename, timestamp)
+2. **Event**: Azure Event Grid captures the BlobCreated event and delivers it to the Function App
+3. **Trigger**: The Event Grid trigger receives the event and starts processing the document
+4. **Analyze**: Azure AI Content Understanding extracts fields defined in your schema
+5. **Store**: Extracted data is saved to Cosmos DB with metadata (document ID, filename, timestamp)
 
 ## Getting Started
 
@@ -166,7 +167,7 @@ To change the `azd` parameters from the default values, follow the steps [here](
     ```
 
 > [!NOTE]
-> The `azd up` command will provision infrastructure, deploy the function app, and create a custom Content Understanding analyzer based on `schemas/schema.json`.
+> The `azd up` command will provision infrastructure (including Event Grid system topic and subscription), deploy the function app, and create a custom Content Understanding analyzer based on `schemas/schema.json`.
 
 ## Usage
 
