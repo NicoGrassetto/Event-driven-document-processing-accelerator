@@ -13,6 +13,32 @@ infra:
   path: ./infra
 
 hooks:
+  preprovision:
+    posix:
+      shell: sh
+      run: |
+        echo "Setting deploying user's principal ID for Cosmos DB access..."
+        USER_PRINCIPAL_ID=$(az ad signed-in-user show --query id -o tsv 2>/dev/null)
+        if [ -n "$USER_PRINCIPAL_ID" ]; then
+          azd env set userPrincipalId "$USER_PRINCIPAL_ID"
+          echo "✓ Set userPrincipalId: $USER_PRINCIPAL_ID"
+        else
+          echo "⚠ Could not get user principal ID - Cosmos DB Portal access won't be configured"
+        fi
+      continueOnError: true
+    windows:
+      shell: pwsh
+      run: |
+        Write-Host "Setting deploying user's principal ID for Cosmos DB access..."
+        $userPrincipalId = az ad signed-in-user show --query id -o tsv 2>$null
+        if ($userPrincipalId) {
+          azd env set userPrincipalId $userPrincipalId
+          Write-Host "✓ Set userPrincipalId: $userPrincipalId"
+        } else {
+          Write-Host "⚠ Could not get user principal ID - Cosmos DB Portal access won't be configured"
+        }
+      continueOnError: true
+
   postprovision:
     posix:
       shell: sh
@@ -29,7 +55,7 @@ hooks:
         ./scripts/create-analyzer.ps1
       interactive: true
       continueOnError: false
-  
+
   postdeploy:
     posix:
       shell: sh

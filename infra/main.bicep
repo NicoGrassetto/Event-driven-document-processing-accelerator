@@ -245,6 +245,14 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
           name: 'STORAGE_ACCOUNT_NAME'
           value: storageAccount.name
         }
+        {
+          name: 'ENABLE_ORYX_BUILD'
+          value: 'true'
+        }
+        {
+          name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
+          value: 'true'
+        }
       ]
     }
   }
@@ -260,9 +268,8 @@ resource eventGridSystemTopic 'Microsoft.EventGrid/systemTopics@2023-12-15-previ
   }
 }
 
-// Note: Event Grid subscription will be created manually after deployment
-// This is because the function needs to be deployed first with code before we can subscribe
-// Use Azure CLI or Portal to create the subscription pointing to the function endpoint
+// Note: Event Grid subscription is created via postdeploy hook after Function App code is deployed
+// This is because the function endpoint must exist before Event Grid can validate it
 
 // Role Definitions
 var storageBlobDataOwnerRole = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b')
@@ -287,6 +294,18 @@ resource cosmosDbSqlRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRol
   name: guid(cosmosDbAccount.id, functionApp.id, 'cosmos-contributor')
   properties: {
     principalId: functionApp.identity.principalId
+    roleDefinitionId: '${cosmosDbAccount.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002'
+    scope: cosmosDbAccount.id
+  }
+}
+
+// Role Assignment: Cosmos DB Data Contributor for deploying user (optional)
+// This allows users to browse Cosmos DB data in the Azure Portal
+resource userCosmosDbSqlRoleAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2023-04-15' = if (!empty(userPrincipalId)) {
+  parent: cosmosDbAccount
+  name: guid(cosmosDbAccount.id, userPrincipalId, 'cosmos-contributor-user')
+  properties: {
+    principalId: userPrincipalId
     roleDefinitionId: '${cosmosDbAccount.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002'
     scope: cosmosDbAccount.id
   }
