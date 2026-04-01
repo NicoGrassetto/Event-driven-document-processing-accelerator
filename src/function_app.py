@@ -24,6 +24,7 @@ from typing import Optional
 import azure.functions as func
 from azure.identity import DefaultAzureCredential
 from azure.cosmos import CosmosClient, PartitionKey
+from azure.cosmos.exceptions import CosmosResourceNotFoundError
 from azure.storage.blob import BlobServiceClient
 
 from utils import analyze_document, extract_fields_from_result
@@ -84,10 +85,53 @@ def get_cosmos_client() -> CosmosClient:
     )
 
 
+def _generate_document_id(blob_path: str) -> str:
+    """Generate a deterministic document ID from the blob path.
+    
+    Uses UUID5 (SHA-1 based) to create a reproducible ID from the blob path,
+    ensuring that duplicate Event Grid events for the same blob produce the same ID.
+    
+    Args:
+        blob_path: The blob path from the Event Grid event subject.
+    
+    Returns:
+        A deterministic UUID string for the blob path.
+    """
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, blob_path))
+
+
+def _is_document_processed(document_id: str) -> bool:
+    """Check if a document has already been processed.
+    
+    Performs a point read in Cosmos DB to check if a document with the given ID
+    already exists with a 'processed' status. This is used for duplicate detection
+    to avoid redundant processing of duplicate Event Grid events.
+    
+    Args:
+        document_id: The deterministic document ID to check.
+    
+    Returns:
+        True if the document has already been processed, False otherwise.
+    """
+    try:
+        cosmos_client = get_cosmos_client()
+        database = cosmos_client.get_database_client(COSMOS_DATABASE)
+        container = database.get_container_client(COSMOS_CONTAINER)
+        
+        item = container.read_item(item=document_id, partition_key=document_id)
+        return item.get("status") == "processed"
+    except CosmosResourceNotFoundError:
+        return False
+    except Exception as e:
+        logger.warning(f"Failed to check duplicate status for {document_id}: {str(e)}")
+        return False
+
+
 def process_document_internal(
     document_bytes: bytes,
     document_name: str,
-    content_type: str = "application/octet-stream"
+    content_type: str = "application/octet-stream",
+    document_id: str = None
 ) -> dict:
     """Process a document through ACU and store results in Cosmos DB.
     
@@ -95,11 +139,14 @@ def process_document_internal(
         document_bytes: The document content as bytes.
         document_name: The name of the document file.
         content_type: The MIME type of the document.
+        document_id: Optional pre-generated document ID. If not provided,
+            a random UUID will be generated.
     
     Returns:
         Dictionary containing the processed document data and metadata.
     """
-    document_id = str(uuid.uuid4())
+    if document_id is None:
+        document_id = str(uuid.uuid4())
     logger.info(f"Processing document: {document_name} (ID: {document_id})")
     
     # Get credential for ACU
@@ -184,6 +231,14 @@ def process_document_eventgrid(event: func.EventGridEvent):
         blob_path = subject_parts[1]
         file_name = blob_path.split("/")[-1]
         
+        # Generate deterministic document ID for duplicate detection
+        document_id = _generate_document_id(blob_path)
+        
+        # Check if this document has already been processed (duplicate event detection)
+        if _is_document_processed(document_id):
+            logger.info(f"Document already processed, skipping duplicate event: {blob_path} (ID: {document_id})")
+            return
+        
         logger.info(f"Processing blob: {blob_path}")
         logger.info(f"Blob size: {content_length} bytes")
         logger.info(f"Content type: {content_type}")
@@ -213,7 +268,8 @@ def process_document_eventgrid(event: func.EventGridEvent):
         result = process_document_internal(
             document_bytes=document_bytes,
             document_name=file_name,
-            content_type=content_type
+            content_type=content_type,
+            document_id=document_id
         )
         
         logger.info(f"Successfully processed document: {file_name}")
